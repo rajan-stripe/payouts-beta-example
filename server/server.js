@@ -1,6 +1,11 @@
 const express = require('express');
 const app = express();
+
+var bodyparser = require('body-parser')
+app.use(bodyparser.urlencoded({ extended: true }))
+
 const { resolve } = require('path');
+
 // Replace if using a different env file or config
 const env = require('dotenv').config({ path: './.env' });
 
@@ -18,7 +23,8 @@ function consoleLog(message) {
   console.log(`[${currentDateTime}] ${message}`);
 }
 
-app.use(express.static(process.env.STATIC_DIR));
+// app.use(express.static(process.env.STATIC_DIR));
+
 app.use(
   express.json({
     // We need the raw body to verify webhook signatures.
@@ -32,9 +38,20 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  const path = resolve(process.env.STATIC_DIR + '/index.html');
+  // const path = resolve(process.env.STATIC_DIR + '/index.html');
+  const path = __dirname + '/index.html';
   res.sendFile(path);
 });
+
+
+app.get('/claimsubmitted', function (req, res) {
+  res.sendFile(__dirname + '/claimspay.html')
+})
+
+app.post('/submitclaim', function (req, res) {
+  console.log(req.body)
+  res.redirect('/claimsubmitted')
+})
 
 app.get('/accountname', (req, res) => {
   res.send({
