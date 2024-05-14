@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Insurance Claims Using Recipient Payouts (US)</title>
+
+  <link rel="stylesheet" href="/css/base.css" />
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- <style>
+    /* Add your CSS styling here */
+    .flex { display: flex; }
+    .min-h-screen { min-height: 100vh; }
+    .bg-gray-100 { background-color: #f7fafc; }
+    .bg-white { background-color: white; }
+    .p-5 { padding: 1.25rem; }
+    .mb-5 { margin-bottom: 1.25rem; }
+    .space-x-2 > * + * { margin-left: 0.5rem; }
+    .rounded { border-radius: 0.25rem; }
+    .font-roboto { font-family: Roboto, sans-serif; }
+    .text-xl { font-size: 1.25rem; }
+    .text-gray-700 { color: #4a5568; }
+    .text-blue-600 { color: #3182ce; }
+    /* Further styling */
+  </style>   -->
+
+  <script src="/utils.js" defer></script>
+  <script src="/claims.js" defer></script>
+
+</head>
+
+<body>
+  <main>
+    <div class="container">
+      <img src="https://www.futuretravelexperience.com/wp-content/uploads/2022/03/collinson.png" alt="Logo Here"
+        width="200" height="100">
+
+    </div>
+
+    <h1>Insurance Claims Payouts Using Recipient Payouts (US)</h1>
+    <h2>Claim Approved - Payout to Customer</h2>
+    
+    <form id="claim-form">
+      <div class="container">
+
+        <div class="well">
+          <div class="container">
+            <table class="claim-summary">
+              <tr>
+                <td>Claim Amount</td>
+                <td>£<span id="price">0.00</span></td>
+              </tr>
+  
+            </table>
+  
+            <div class="error-message" role="alert"></div>
+          </div>
+        </div>
+        <section>
+          <h3>Collect Customer Bank Details</h3>
+          <label>
+            Sort Code
+            <input type="text" class="bank-sort" placeholder="" />
+          </label>
+          <label>
+            Account No
+            <input type="text" class="bank-account" placeholder="" />
+          </label>
+          <button type="button" onclick="addDonation(5)">Attach Bank</button>
+          <hr>
+          <button type="button" onclick="addDonation(5)">Get Bank Details (Hosted)</button>
+
+        </section>
+        <hr>
+      </div>
+      <button type="submit" class="submit-button">Submit Claim</button>
+    </form>
+</main>
+</body>
+
+</html>
