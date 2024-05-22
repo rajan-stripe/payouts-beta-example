@@ -30,6 +30,8 @@ const stripe = require('@stripe/stripe')(process.env.STRIPE_V2_API_KEY, {
 //   apiVersion: '2024-04-11'
 });
 
+# Start the server
+%cd ./server
 %npm install
 %npm start
 

@@ -30,7 +30,65 @@
   </style>   -->
 
   <script src="/utils.js" defer></script>
-  <script src="/claims.js" defer></script>
+  <!-- <script src="/claimspay.js" defer></script> -->
+
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const rpAccountJSON = localStorage.getItem('rpAccount');
+      if (rpAccountJSON) {
+        const rpAccount = JSON.parse(rpAccountJSON);
+        console.log('RP Account Data:', rpAccount);
+        // Store the rpAccount globally for later use
+        window.rpAccount = rpAccount;
+      } 
+      else {
+        console.error('No rpAccount data found in local storage.');
+      }
+    });
+
+    // Get hosted bank details for the recipient claim created
+    async function addBankHosted() {
+      const rpAccount = window.rpAccount;
+      if (!rpAccount) {
+        console.error('No RP Account data available.');
+        return;
+      }
+
+      try {
+        const response = await fetch("/bankdetails-hosted", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json' // This line specifies the content type.
+          },
+          body: JSON.stringify({
+            items: [{ 
+              rp_accountId: rpAccount.id,
+            }],
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.redirectUrl) {
+            // Redirect to the hosted bank details page
+            window.location.href = data.redirectUrl;
+          } 
+          else {
+            console.error('No redirect URL provided in the response.');
+          }
+        } 
+        else {
+          const error = await response.json();
+          console.error('Error:', error.message);
+        }
+      } 
+      catch (error) {
+        console.error('Error while making request:', error);
+      }
+    }
+
+  </script>
 
 </head>
 
@@ -71,9 +129,9 @@
             Account No
             <input type="text" class="bank-account" placeholder="" />
           </label>
-          <button type="button" onclick="addDonation(5)">Attach Bank</button>
+          <button type="button" onclick="addBank()">Attach Bank</button>
           <hr>
-          <button type="button" onclick="addDonation(5)">Get Bank Details (Hosted)</button>
+          <button type="button" onclick="addBankHosted()">Get Bank Details (Hosted)</button>
 
         </section>
         <hr>

@@ -40,55 +40,84 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      // const { error } = await stripe.confirmSetup({
-      //   elements,
-      //   confirmParams: {
-      //     return_url: 'http://localhost:4242/return.html',
-      //   }
-      // });
+      try {
 
-      // name = document.getElementById('name-input').innerText
-      const claimName = 'JDoe';
-      const claimType = 'Medical';
-      const claimAddress = '10 Downing Street, London, SW14 4AA';
-      const claimDetails = 'Medical bills';
-      const claimPolicyId = 'CL12345678'
-      const claimAmount = 101.00;
+        // const claimName = document.getElementById('name-input').value;
+        const claimName = 'JWick';
+        const claimType = 'Medical';
+        const claimEMailAddress = 'jw@example.com';
+        const claimAddress = '10 Downing Street, London, SW14 4AA';
+        const claimDetails = 'Medical bills';
+        const claimPolicyId = 'CL12345678'
+        const claimAmount = 101.00;
+        const isBusinessClaim = false; 
+        const claimFirstName  = 'John';
+        const claimSurname = 'Wick';
 
+        // Prevent multiple form submissions
+        if (submitBtn.disabled) {
+          return;
+        }
 
-      // Prevent multiple form submissions
-      if (submitBtn.disabled) {
-        return;
+        // Disable the submit button to prevent multiple submissions
+        submitBtn.disabled = true;
+    
+        // Create recipient 
+        const response = await fetch("/approve-claim", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json' // This line specifies the content type.
+          },
+          body: JSON.stringify({
+            items: [{ 
+              claimName: claimName,
+              claimEMailAddress : claimEMailAddress,
+              claimType: claimType,
+              claimAddress: claimAddress,
+              claimDetails: claimDetails,
+              claimPolicyId : claimPolicyId,
+              claimAmount : claimAmount,
+              isBusinessClaim : isBusinessClaim,
+              claimFirstName : claimFirstName,
+              claimSurname : claimSurname,
+            }],
+          }),
+        });
+
+         // Check the response status
+        if (response.ok) {
+          // Redirect the user to the desired page
+          // Get the recipient account id returned
+          const rpj = await response.json();
+          const rps = JSON.stringify(rpj)
+          // Store the rpAccount object in local storage
+          console.log('RP Account Data Returned:', rpj);
+          localStorage.setItem('rpAccount', rpj);  
+
+          // Set the response data to the textbox
+          document.getElementById('response-textbox').value = rpj;
+
+          // // Store the rp_accountId in local storage (optional)
+          // const rp_accountId = responseData.rp_accountId;
+          // localStorage.setItem('rp_accountId', rp_accountId);
+
+          // Alternatively, pass the rp_accountId as a query parameter in the URL
+          // window.location.href = `/claimspay.html?rp_accountId=${rp_accountId}`;
+
+          //window.location.href = '/claimspay.html';
+        } 
+        else {
+          // Handle any errors
+          const error = await response.json();
+          console.error('Error:', error.message);
+        }
       }
-
-
-      // Create recipient 
-      const res = await fetch("/approve-claim", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json' // This line specifies the content type.
-        },
-        body: JSON.stringify({
-          items: [{ 
-            claimName: claimName,
-            claimType: claimType,
-            claimAddress: claimAddress,
-            claimDetails: claimDetails,
-            claimPolicyId : claimPolicyId,
-            claimAmount : claimAmount,
-          }],
-        }),
-      });
-
-      // if (error) {
-      //   const messageContainer = document.querySelector('#error-message');
-      //   messageContainer.textContent = error.message;
-      // } 
-      // else {
-
-      // }
-
-
+      catch (error) {
+        console.error('Error:', error);
+      }
+      finally {
+        submitBtn.disabled = false; // Re-enable the submit button
+      }
 
     });
   })();

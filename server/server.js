@@ -9,6 +9,14 @@ const { resolve } = require('path');
 // Replace if using a different env file or config
 const env = require('dotenv').config({ path: './.env' });
 
+// app.use(express.static(process.env.STATIC_DIR));
+
+const path = require('path');
+consoleLog(path)
+consoleLog(__dirname)
+
+app.use(express.static(path.join(__dirname, process.env.STATIC_DIR)));
+
 
 const stripe = require('@stripe/stripe')(process.env.STRIPE_V2_API_KEY, {
   // apiVersion: '2024-04-11',
@@ -23,7 +31,6 @@ function consoleLog(message) {
   console.log(`[${currentDateTime}] ${message}`);
 }
 
-// app.use(express.static(process.env.STATIC_DIR));
 
 app.use(
   express.json({
@@ -38,20 +45,12 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  // const path = resolve(process.env.STATIC_DIR + '/index.html');
-  const path = __dirname + '/index.html';
+  const path = resolve(process.env.STATIC_DIR + '/index.html');
+  consoleLog(path)
+  // const path = __dirname + '/index.html';
   res.sendFile(path);
 });
 
-
-app.get('/claimsubmitted', function (req, res) {
-  res.sendFile(__dirname + '/claimspay.html')
-})
-
-app.post('/submitclaim', function (req, res) {
-  console.log(req.body)
-  res.redirect('/claimsubmitted')
-})
 
 app.get('/accountname', (req, res) => {
   res.send({
@@ -119,6 +118,23 @@ app.get('/accountid', (req, res) => {
 //   res.json({ client_secret: intent.client_secret });
 // });
 
+
+
+// Show the claim pay screen
+app.get('/claimapproved', function (req, res) {
+
+  console.log("/claimapproved")
+  const path = resolve(process.env.STATIC_DIR + '/claimspay.html');
+  consoleLog(path)
+  res.sendFile(path)
+})
+
+app.get('/submitclaim', function (req, res) {
+  console.log("/submitclaim")
+  console.log(req.body)
+  res.redirect('/claimapproved')
+})
+
 // Approve claim - create recipient and then take to bank account self hosting
 app.post('/approve-claim', async (req, res) => {
   
@@ -135,22 +151,253 @@ app.post('/approve-claim', async (req, res) => {
 
   // // Extract the price of the first item
   const { claimName } = firstItem;
+  const { claimEMailAddress } = firstItem;
   const { claimType } = firstItem;
   const { claimAddress } = firstItem;
   const { claimDetails } = firstItem;
   const { claimPolicyId } = firstItem;
   const { claimAmount } = firstItem;
+  const { isBusinessClaim } = firstItem;
+  const { claimFirstName } = firstItem;
+  const { claimSurname } = firstItem;
+   
   
 
   // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
+  // https://docs.corp.stripe.com/api/v2/accounts/create 
+
+  const rp_account = await stripe.v2.accounts.create({
+    include: ['legal_entity_data', 'configuration.recipient_data'],
+    name: claimName,
+    email: claimEMailAddress,
+    legal_entity_data: {
+      business_type: 'individual',
+      country: 'us',
+      name: claimName,
+      representative: {
+        address: {
+          city : 'San Francisco',
+          country: 'US',
+          line1: '5 Main Street',
+          line2: 'Union Square',
+          postal_code: '95210',
+        },
+        given_name: claimFirstName,
+        surname: claimSurname,
+      },
+    },
+    configuration: {
+      recipient_data: {
+        features: {
+          bank_accounts: {
+            local: {
+              requested: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  console.log(rp_account);
+
+
 
 
   // // For demonstration, let's log the price to the console
   // console.log(`Name: ${rp_name}`);
-  console.log("/claimspay.html");
-  res.redirect(307, "claimspay.html")
 
+  // res.redirect('/claimapproved');
+
+  res.json({ rp_accountId: rp_account.id });
 });
+
+
+// Show the claim pay screen
+app.get('/claimapproved', function (req, res) {
+
+  console.log("/claimapproved")
+  const path = resolve(process.env.STATIC_DIR + '/claimspay.html');
+  consoleLog(path)
+  res.sendFile(path)
+})
+
+
+app.get('/submitclaim', function (req, res) {
+  console.log("/submitclaim")
+  console.log(req.body)
+  res.redirect('/claimapproved')
+})
+
+  
+// Get Hosted Bank Details see https://docs.corp.stripe.com/api/v2/accounts/account-links/create 
+app.post('/bankdetails-hosted', async (req, res) => {
+  
+  // see https://docs.corp.stripe.com/api/v2/accounts/account-links/create
+  // For demonstration, let's log the received items to console
+  console.log(req.body.items);
+
+  try {
+
+     // Ensure there are items in the request body
+    if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
+      return res.status(400).json({ error: "No items provided." });
+    }
+
+    // Extract the first item from the array
+    const firstItem = req.body.items[0];
+
+    // // Extract the price of the first item
+    const { rpAccountId } = firstItem; 
+
+    const accountLink = await stripe.v2.accountLinks.create({
+      account: rpAccountId,
+      use_case: {
+        type: 'account_onboarding',
+        account_onboarding: {
+          configurations: ['recipient'],
+          refresh_url: 'http://localhost:4242/claimspay.html',
+          return_url: 'http://localhost:4242/claimspay.html',
+        },
+      },
+    });
+
+   
+    // Respond with the redirect URL
+    res.json({ redirectUrl: hostedUrl });
+
+  } 
+  catch (error) {
+    console.error('Error while initializing hosted bank details collection:', error);
+    res.status(500).json({ error: 'Failed to initialize hosted bank details collection' });
+  }
+   
+});
+
+
+// Test Approve claim - create recipient and then take to bank account self hosting
+app.post('/approve-claim', async (req, res) => {
+  
+  // For demonstration, let's log the received items to console
+  console.log('/approve-claim');
+  console.log(req.body.items);
+  
+   // Ensure there are items in the request body
+  if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
+      return res.status(400).json({ error: "No items provided." });
+  }
+
+  // Extract the first item from the array
+  const firstItem = req.body.items[0];
+
+  // // Extract the price of the first item
+  const { claimName } = firstItem;
+  const { claimEMailAddress } = firstItem;
+  const { claimType } = firstItem;
+  const { claimAddress } = firstItem;
+  const { claimDetails } = firstItem;
+  const { claimPolicyId } = firstItem;
+  const { claimAmount } = firstItem;
+  const { isBusinessClaim } = firstItem;
+  const { claimFirstName } = firstItem;
+  const { claimSurname } = firstItem;
+   
+  
+
+  // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
+  // https://docs.corp.stripe.com/api/v2/accounts/create 
+
+
+  const rp_account = await stripe.v2.accounts.retrieve(
+    'acct_test_61QSiioAgmgqkXZPt66QSiioAoSQZDmtXkAMwGDU87Iu',
+    {
+      include: ['legal_entity_data', 'configuration.recipient_data'],
+    }
+  );
+
+  consoleLog(`accounts.retrieve: ${JSON.stringify(rp_account, null, 2)}`);
+  res.json(rp_account);
+   
+});
+
+
+
+// // Approve claim - create recipient and then take to bank account self hosting
+// app.post('/approve-claim', async (req, res) => {
+  
+//   // For demonstration, let's log the received items to console
+//   console.log(req.body.items);
+  
+//    // Ensure there are items in the request body
+//   if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
+//       return res.status(400).json({ error: "No items provided." });
+//   }
+
+//   // Extract the first item from the array
+//   const firstItem = req.body.items[0];
+
+//   // // Extract the price of the first item
+//   const { claimName } = firstItem;
+//   const { claimEMailAddress } = firstItem;
+//   const { claimType } = firstItem;
+//   const { claimAddress } = firstItem;
+//   const { claimDetails } = firstItem;
+//   const { claimPolicyId } = firstItem;
+//   const { claimAmount } = firstItem;
+//   const { isBusinessClaim } = firstItem;
+//   const { claimFirstName } = firstItem;
+//   const { claimSurname } = firstItem;
+   
+  
+
+//   // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
+//   // https://docs.corp.stripe.com/api/v2/accounts/create 
+
+//   const rp_account = await stripe.v2.accounts.create({
+//     include: ['legal_entity_data', 'configuration.recipient_data'],
+//     name: claimName,
+//     email: claimEMailAddress,
+//     legal_entity_data: {
+//       business_type: 'individual',
+//       country: 'us',
+//       name: claimName,
+//       representative: {
+//         address: {
+//           city : 'San Francisco',
+//           country: 'US',
+//           line1: '5 Main Street',
+//           line2: 'Union Square',
+//           postal_code: '95210',
+//         },
+//         given_name: claimFirstName,
+//         surname: claimSurname,
+//       },
+//     },
+//     configuration: {
+//       recipient_data: {
+//         features: {
+//           bank_accounts: {
+//             local: {
+//               requested: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//   });
+
+//   console.log(rp_account);
+
+
+  
+
+//   // // For demonstration, let's log the price to the console
+//   // console.log(`Name: ${rp_name}`);
+
+//   // res.redirect('/claimapproved');
+
+//   res.json({ rp_accountId: rp_account.id });
+// });
 
 
 
