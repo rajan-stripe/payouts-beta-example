@@ -2,6 +2,8 @@
 # payouts-beta
 This app simply demos Payouts Beta to facilitate a claims insurance payout direct to bank accounts
 
+https://github.com/rajan-stripe/payouts-beta-example 
+
 To enable payouts there is special beta sdk and gh key to use as per  https://docs.corp.stripe.com/sdks-v2?lang=node 
 
 Use Gh token STRIPE_V2_SDK_GH_TOKEN in env ghp_u5QgAp******POe
