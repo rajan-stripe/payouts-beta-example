@@ -47,12 +47,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const claimType = 'Medical';
         const claimEMailAddress = 'jw@example.com';
         const claimAddress = '10 Downing Street, London, SW14 4AA';
-        const claimDetails = 'Medical bills';
-        const claimPolicyId = 'CL12345678'
-        const claimAmount = 101.00;
+        const claimDescription = 'Medical bills';
+        const claimPolicyId = 'CL12345678';
+        const claimAmount = Number(101.00).toFixed(2);
         const isBusinessClaim = false; 
         const claimFirstName  = 'John';
         const claimSurname = 'Wick';
+
+        const claimDetails = {
+          claimName: claimName,
+          claimType: claimType,
+          claimEMailAddress: claimEMailAddress,
+          claimAddress: claimAddress,
+          claimDescription: claimDescription,
+          claimPolicyId: claimPolicyId,
+          claimAmount: claimAmount,
+          isBusinessClaim: isBusinessClaim,
+          claimFirstName: claimFirstName,
+          claimSurname: claimFirstName,
+        };
 
         // Prevent multiple form submissions
         if (submitBtn.disabled) {
@@ -89,22 +102,27 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Redirect the user to the desired page
           // Get the recipient account id returned
           const rpj = await response.json();
+
+          
           const rps = JSON.stringify(rpj)
           // Store the rpAccount object in local storage
           console.log('RP Account Data Returned:', rpj);
-          localStorage.setItem('rpAccount', rpj);  
+          localStorage.setItem('rpAccount', rps);  
+
+          // Store the JSON object in local storage
+          localStorage.setItem('claimDetails', JSON.stringify(claimDetails));
 
           // Set the response data to the textbox
-          document.getElementById('response-textbox').value = rpj;
+          document.getElementById('response-textbox').value = rps;
 
-          // // Store the rp_accountId in local storage (optional)
-          // const rp_accountId = responseData.rp_accountId;
+          // Store the rp_accountId in local storage (optional)
+          // const rp_accountId = rpj.rp_accountId;
           // localStorage.setItem('rp_accountId', rp_accountId);
 
           // Alternatively, pass the rp_accountId as a query parameter in the URL
           // window.location.href = `/claimspay.html?rp_accountId=${rp_accountId}`;
 
-          //window.location.href = '/claimspay.html';
+          window.location.href = '/claimspay.html';
         } 
         else {
           // Handle any errors

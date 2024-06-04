@@ -1,0 +1,9 @@
+jupyter
+stripe
+seaborn
+matplotlib
+faker
+faker-commerce
+PyQtWebEngine
+networkx
+python-dotenv

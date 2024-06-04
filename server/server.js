@@ -166,50 +166,55 @@ app.post('/approve-claim', async (req, res) => {
   // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
   // https://docs.corp.stripe.com/api/v2/accounts/create 
 
-  const rp_account = await stripe.v2.accounts.create({
-    include: ['legal_entity_data', 'configuration.recipient_data'],
-    name: claimName,
-    email: claimEMailAddress,
-    legal_entity_data: {
-      business_type: 'individual',
-      country: 'us',
-      name: claimName,
-      representative: {
-        address: {
-          city : 'San Francisco',
-          country: 'US',
-          line1: '5 Main Street',
-          line2: 'Union Square',
-          postal_code: '95210',
-        },
-        given_name: claimFirstName,
-        surname: claimSurname,
-      },
-    },
-    configuration: {
-      recipient_data: {
-        features: {
-          bank_accounts: {
-            local: {
-              requested: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  // const rp_account = await stripe.v2.accounts.create({
+  //   include: ['legal_entity_data', 'configuration.recipient_data'],
+  //   name: claimName,
+  //   email: claimEMailAddress,
+  //   legal_entity_data: {
+  //     business_type: 'individual',
+  //     country: 'us',
+  //     name: claimName,
+  //     representative: {
+  //       address: {
+  //         city : 'San Francisco',
+  //         country: 'US',
+  //         line1: '5 Main Street',
+  //         line2: 'Union Square',
+  //         postal_code: '95210',
+  //       },
+  //       given_name: claimFirstName,
+  //       surname: claimSurname,
+  //     },
+  //   },
+  //   configuration: {
+  //     recipient_data: {
+  //       features: {
+  //         bank_accounts: {
+  //           local: {
+  //             requested: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
 
-  console.log(rp_account);
-
-
+  // console.log(rp_account);
 
 
-  // // For demonstration, let's log the price to the console
-  // console.log(`Name: ${rp_name}`);
 
-  // res.redirect('/claimapproved');
 
-  res.json({ rp_accountId: rp_account.id });
+  // // // For demonstration, let's log the price to the console
+  // // console.log(`Name: ${rp_name}`);
+
+  // // res.redirect('/claimapproved');
+
+  // res.json({ rp_accountId: rp_account.id });
+
+
+  // TEST
+  res.json({ rp_accountId: "acct_test_61QUwGV8JP0qJFctE66QUwGVAoSQLEwzskEAKuAfAWFU" });
+
 });
 
 
@@ -235,7 +240,8 @@ app.post('/bankdetails-hosted', async (req, res) => {
   
   // see https://docs.corp.stripe.com/api/v2/accounts/account-links/create
   // For demonstration, let's log the received items to console
-  console.log(req.body.items);
+  consoleLog('/bankdetails-hosted');
+  consoleLog(req.body.items);
 
   try {
 
@@ -248,28 +254,34 @@ app.post('/bankdetails-hosted', async (req, res) => {
     const firstItem = req.body.items[0];
 
     // // Extract the price of the first item
-    const { rpAccountId } = firstItem; 
+    const { rp_accountId } = firstItem; 
+    consoleLog(`Create hosted checkout for: ${rp_accountId}`);
 
+    // Need to rediect back to the claimspay but as we are doing local host goto another page for local testing redirect as need a actual page
     const accountLink = await stripe.v2.accountLinks.create({
-      account: rpAccountId,
+      account: rp_accountId,
       use_case: {
         type: 'account_onboarding',
         account_onboarding: {
           configurations: ['recipient'],
-          refresh_url: 'http://localhost:4242/claimspay.html',
-          return_url: 'http://localhost:4242/claimspay.html',
+          // refresh_url: 'http://localhost://4242/claimpay-send.html',
+          // return_url: 'http://localhost://4242/claimpay-send.html',
+          refresh_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay.html',
+          return_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html?return_from_hosted',
         },
       },
     });
 
-   
+    consoleLog(accountLink);
+    const hostedUrl = accountLink.url;
+
     // Respond with the redirect URL
     res.json({ redirectUrl: hostedUrl });
 
   } 
   catch (error) {
     console.error('Error while initializing hosted bank details collection:', error);
-    res.status(500).json({ error: 'Failed to initialize hosted bank details collection' });
+    res.status(500).json({ error: 'Failed to initialize hosted bank details collection' + error });
   }
    
 });
@@ -279,8 +291,8 @@ app.post('/bankdetails-hosted', async (req, res) => {
 app.post('/approve-claim', async (req, res) => {
   
   // For demonstration, let's log the received items to console
-  console.log('/approve-claim');
-  console.log(req.body.items);
+  consoleLog('/approve-claim');
+  consoleLog(req.body.items);
   
    // Ensure there are items in the request body
   if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
@@ -326,7 +338,7 @@ app.post('/approve-claim', async (req, res) => {
 // app.post('/approve-claim', async (req, res) => {
   
 //   // For demonstration, let's log the received items to console
-//   console.log(req.body.items);
+//   consoleLog(req.body.items);
   
 //    // Ensure there are items in the request body
 //   if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
@@ -386,7 +398,7 @@ app.post('/approve-claim', async (req, res) => {
 //     },
 //   });
 
-//   console.log(rp_account);
+//   consoleLog(rp_account);
 
 
   

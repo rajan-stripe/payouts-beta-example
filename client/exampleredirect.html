@@ -1,0 +1,94 @@
+<!-- 
+https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html?return_from_hosted 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalHost Stripe Redirect Page URL Tester</title>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        .link-container {
+            margin: 20px 0;
+        }
+        .redirect-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetURL = urlParams.get('url');
+
+            if (!targetURL) {
+                targetURL = window.location.search.substring(1); // Fallback if no 'url' parameter
+            }
+
+            if (targetURL) {
+                const linkContainer = document.getElementById('link-container');
+                const linkElement = document.createElement('a');
+                linkElement.href = targetURL;
+                linkElement.textContent = targetURL;
+                linkContainer.appendChild(linkElement);
+
+                let countdown = 5;
+                document.getElementById('countdown').textContent = countdown;
+
+                const timer = setInterval(function() {
+                    countdown--;
+                    document.getElementById('countdown').textContent = countdown;
+
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        window.location.href = targetURL;
+                    }
+                }, 1000);
+            } else {
+                const messageContainer = document.getElementById('message');
+                messageContainer.textContent = 'No valid URL provided.';
+            }
+        });
+
+        function redirectToURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetURL = urlParams.get('url');
+
+            if (!targetURL) {
+                targetURL = window.location.search.substring(1); // Fallback if no 'url' parameter
+            }
+
+            if (targetURL) {
+                window.location.href = targetURL;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Redirecting Soon...</h1>
+        
+        Usage: add this full url to your redirect setting in Stripe with a parameter to your localhost url page<br>
+        eg: <a href="https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html">https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html</a> 
+        <br>
+        <br>
+        Note: ensure your server is running on localhost for the redirect to work.
+        <hr>
+        <div id="message"></div>
+        <div class="link-container" id="link-container">
+            <!-- The link will be displayed here -->
+        </div>
+        <button class="redirect-button" onclick="redirectToURL()">Redirect Now</button>
+        <p>You will be redirected automatically in <span id="countdown">10</span> seconds.</p>
+    </div>
+</body>
+</html>

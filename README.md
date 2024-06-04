@@ -58,3 +58,94 @@ There is a file called .env.example which you will need to
     - Bank Account: 00012345
   
 8. Once you have submitted the form you should see a valid direct debit payment method attached to your customer.
+
+
+## Local Redirects
+
+There are 2 options to allow redirect urls to be added to Stripe APIS use a single public webpage to redirect or NGROK. The latter creates a tunnel so might not pass your infosec. policy 
+
+### Using Public WebPage
+
+Use the glitch single page to redirect to your local host
+
+Add this full url to your redirect setting in Stripe with a parameter to your localhost url page
+eg: https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html
+
+Note: ensure your server is running on localhost for the redirect to work.
+
+```bash
+const accountLink = await stripe.v2.accountLinks.create({
+      account: rp_accountId,
+      use_case: {
+        type: 'account_onboarding',
+        account_onboarding: {
+          configurations: ['recipient'],
+          refresh_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay.html',
+          return_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html',
+        },
+      },
+```
+
+
+### Using ngrok
+
+
+Install NGROK
+https://ngrok.com/docs/getting-started/
+
+Encountering errors that indicates that the `return_url` field must start with `https://`, which is a requirement by Stripe for security reasons. Localhost URLs that use `http://` instead of `https://` can lead to this error.
+
+To fix this, there are a couple of options:
+
+1. **Use HTTPS for Local Development**: Configure your local development environment to use HTTPS. You can use tools like `ngrok`, which provides a public URL that forwards to your local server, or set up HTTPS manually.
+
+2. **Use a Public-facing Test Server**: Deploy your application to a secure, publicly accessible test server that uses HTTPS.
+
+Here’s how you can use `ngrok` to set up a secure tunnel to your local server:
+
+1. **Install ngrok**: If you haven't already installed `ngrok`, you can download it from [ngrok's website](https://ngrok.com/download).
+
+2. **Start ngrok**: Open a terminal and run:
+   ```sh
+   ngrok http 4242
+   ```
+   Replace `4242` with the port number your local server is running on. This command will generate a public HTTPS URL that forwards to your local server.
+
+3. **Update Return URL**: Use the `ngrok` URL as your `return_url` and `refresh_url`:
+   ```plaintext
+   const accountLink = await stripe.v2.accountLinks.create({
+     account: rp_accountId,
+     use_case: {
+       type: 'account_onboarding',
+       account_onboarding: {
+         configurations: ['recipient'],
+         refresh_url: 'https://<your-ngrok-url>/refresh',
+         return_url: 'https://<your-ngrok-url>/return',
+       },
+     },
+   });
+   ```
+
+### Example Configuration
+
+Assuming your `ngrok` URL is `https://abc123.ngrok.io`, your configuration would look like this:
+
+```plaintext
+const accountLink = await stripe.v2.accountLinks.create({
+  account: rp_accountId,
+  use_case: {
+    type: 'account_onboarding',
+    account_onboarding: {
+      configurations: ['recipient'],
+      refresh_url: 'https://abc123.ngrok.io/refresh',
+      return_url: 'https://abc123.ngrok.io/return',
+    },
+  },
+});
+```
+
+### Additional Resources
+- **ngrok Documentation**: [ngrok's official documentation](https://ngrok.com/docs) provides detailed instructions on setting up and configuring `ngrok`.
+- **Stripe Documentation**: For more details on configuring URLs and handling errors, see [Stripe's API Reference](https://docs.stripe.com/api).
+
+By using `ngrok`, you can create secure, HTTPS URLs that point to your local development server, satisfying Stripe’s requirement for secure `return_url` and `refresh_url` fields.

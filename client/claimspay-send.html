@@ -35,6 +35,8 @@
   <script>
 
     document.addEventListener('DOMContentLoaded', function() {
+
+      console.log('cliamspay-send.html:DOMContentLoaded', rpAccount);
       const rpAccountJSON = localStorage.getItem('rpAccount');
       if (rpAccountJSON) {
         const rpAccount = JSON.parse(rpAccountJSON);
@@ -58,56 +60,12 @@
     });
 
     // Get hosted bank details for the recipient claim created
-    async function addBankHosted() {
+    async function makePayment() {
+
+      //  https://docs.corp.stripe.com/api/v2/outbound-payments
       const rpAccount = window.rpAccount;
       if (!rpAccount) {
         console.error('No RP Account data available.');
-        return;
-      }
-
-      try {
-        const response = await fetch("/bankdetails-hosted", {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json' // This line specifies the content type.
-          },
-          body: JSON.stringify({
-            items: [{ 
-              rp_accountId: rpAccount.rp_accountId,
-            }],
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.redirectUrl) {
-            // Redirect to the hosted bank details page
-             // Display the redirect URL in the textbox
-            document.getElementById('response-textbox').value = data.redirectUrl;
-            window.location.href = data.redirectUrl;
-          } 
-          else {
-            console.error('No redirect URL provided in the response.');
-          }
-        } 
-        else {
-          const error = await response.json();
-          console.error('Error:', error);
-          document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
-        }
-      } 
-      catch (error) {
-        console.error('Error while making request:', error);
-        document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
-      }
-    }
-
-
-    // Mock function to make the payout (replace with actual implementation)
-    async function makePayout() {
-      const claimDetails = window.claimDetails;
-      if (!claimDetails) {
-        console.error('No Claim Details available.');
         return;
       }
 
@@ -116,7 +74,44 @@
 
       // Replace with actual Stripe payout integration or any other payment processing logic
       alert(`Payout of £${claimAmount} processed successfully!`);
+
+      // try {
+      //   const response = await fetch("/makepayment", {
+      //     method: "POST",
+      //     headers: {
+      //       'Content-Type': 'application/json' // This line specifies the content type.
+      //     },
+      //     body: JSON.stringify({
+      //       items: [{ 
+      //         rp_accountId: rpAccount.rp_accountId,
+      //       }],
+      //     }),
+      //   });
+
+      //   if (response.ok) {
+      //     const data = await response.json();
+      //     if (data.redirectUrl) {
+      //       // Redirect to the hosted bank details page
+      //        // Display the redirect URL in the textbox
+      //       document.getElementById('response-textbox').value = data.redirectUrl;
+      //       window.location.href = data.redirectUrl;
+      //     } 
+      //     else {
+      //       console.error('No redirect URL provided in the response.');
+      //     }
+      //   } 
+      //   else {
+      //     const error = await response.json();
+      //     console.error('Error:', error);
+      //     document.getElementById('response-textbox').value = `Error: ${error}`;
+      //   }
+      // } 
+      // catch (error) {
+      //   console.error('Error while making request:', error);
+      //   document.getElementById('response-textbox').value = `Error: ${error.message}`;
+      // }
     }
+
 
      // Function to add the payment section
     function addPaymentSection() {
@@ -133,10 +128,13 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       // Check if the URL has query parameters indicating a return from the hosted page
+
+      // Add Payment Section as user has returned from the hosted details page
+      addPaymentSection();
+
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has('return_from_hosted')) {
-        // Add Payment Section as user has returned from the hosted details page
-        addPaymentSection();
+         // if redirect param provided
       }
     });
 
@@ -154,7 +152,7 @@
     </div>
 
     <h1>Insurance Claims Payouts Using Recipient Payouts (US)</h1>
-    <h2>Claim Approved - Get Customer Payment Details</h2>
+    <h2>Claim Approved - Payout to Customer</h2>
     
     <form id="claim-form">
       <div class="container">
@@ -172,28 +170,11 @@
             <div class="error-message" role="alert"></div>
           </div>
         </div>
-        <section>
-          <h3>Collect Customer Bank Details</h3>
-          <label>
-            Sort Code
-            <input type="text" class="bank-sort" placeholder="" />
-          </label>
-          <label>
-            Account No
-            <input type="text" class="bank-account" placeholder="" />
-          </label>
-          <button type="button" onclick="addBank()">Attach Bank</button>
-          <hr>
-          <button type="button" onclick="addBankHosted()">Get Bank Details (Hosted)</button>
-
-        </section>
-        <hr>
-      </div>
-      <button type="submit" class="submit-button">Submit Claim</button>
-
+      
       <hr>
       <!-- Container for Payment Section -->
       <div id="payment-section-container"></div>
+      <button type="submit" class="submit-button">Submit Claim</button>
 
       <!-- Textbox to display the response -->
       <hr>
