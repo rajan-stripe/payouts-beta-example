@@ -135,88 +135,6 @@ app.get('/submitclaim', function (req, res) {
   res.redirect('/claimapproved')
 })
 
-// Approve claim - create recipient and then take to bank account self hosting
-app.post('/approve-claim', async (req, res) => {
-  
-  // For demonstration, let's log the received items to console
-  console.log(req.body.items);
-  
-   // Ensure there are items in the request body
-  if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
-      return res.status(400).json({ error: "No items provided." });
-  }
-
-  // Extract the first item from the array
-  const firstItem = req.body.items[0];
-
-  // // Extract the price of the first item
-  const { claimName } = firstItem;
-  const { claimEMailAddress } = firstItem;
-  const { claimType } = firstItem;
-  const { claimAddress } = firstItem;
-  const { claimDetails } = firstItem;
-  const { claimPolicyId } = firstItem;
-  const { claimAmount } = firstItem;
-  const { isBusinessClaim } = firstItem;
-  const { claimFirstName } = firstItem;
-  const { claimSurname } = firstItem;
-   
-  
-
-  // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
-  // https://docs.corp.stripe.com/api/v2/accounts/create 
-
-  // const rp_account = await stripe.v2.accounts.create({
-  //   include: ['legal_entity_data', 'configuration.recipient_data'],
-  //   name: claimName,
-  //   email: claimEMailAddress,
-  //   legal_entity_data: {
-  //     business_type: 'individual',
-  //     country: 'us',
-  //     name: claimName,
-  //     representative: {
-  //       address: {
-  //         city : 'San Francisco',
-  //         country: 'US',
-  //         line1: '5 Main Street',
-  //         line2: 'Union Square',
-  //         postal_code: '95210',
-  //       },
-  //       given_name: claimFirstName,
-  //       surname: claimSurname,
-  //     },
-  //   },
-  //   configuration: {
-  //     recipient_data: {
-  //       features: {
-  //         bank_accounts: {
-  //           local: {
-  //             requested: true,
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
-
-  // console.log(rp_account);
-
-
-
-
-  // // // For demonstration, let's log the price to the console
-  // // console.log(`Name: ${rp_name}`);
-
-  // // res.redirect('/claimapproved');
-
-  // res.json({ rp_accountId: rp_account.id });
-
-
-  // TEST
-  res.json({ rp_accountId: "acct_test_61QUwGV8JP0qJFctE66QUwGVAoSQLEwzskEAKuAfAWFU" });
-
-});
-
 
 // Show the claim pay screen
 app.get('/claimapproved', function (req, res) {
@@ -234,15 +152,115 @@ app.get('/submitclaim', function (req, res) {
   res.redirect('/claimapproved')
 })
 
+ 
+// Approve claim - create recipient and then take to bank account self hosting
+app.post('/create-claim', async (req, res) => {
   
+  // For demonstration, let's log the received items to console
+  consoleLog(`/create-claim: ${JSON.stringify(req.body.items, null, 2)}`);
+  
+  try {
+
+    // Ensure there are items in the request body
+    if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
+        return res.status(400).json({ error: "No items provided." });
+    }
+
+    // Extract the first item from the array
+    const firstItem = req.body.items[0];
+
+    // // Extract the price of the first item
+    const { claimName } = firstItem;
+    const { claimEMailAddress } = firstItem;
+    const { claimType } = firstItem;
+    const { claimAddress } = firstItem;
+    const { claimDetails } = firstItem;
+    const { claimPolicyId } = firstItem;
+    const { claimAmount } = firstItem;
+    const { isBusinessClaim } = firstItem;
+    const { claimFirstName } = firstItem;
+    const { claimSurname } = firstItem;
+    
+    
+
+    // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
+    // https://docs.corp.stripe.com/api/v2/accounts/create 
+
+    const rp_account = await stripe.v2.accounts.create({
+      include: ['legal_entity_data', 'configuration.recipient_data'],
+      name: claimName,
+      email: claimEMailAddress,
+      legal_entity_data: {
+        business_type: 'individual',
+        country: 'us',
+        name: claimName,
+        representative: {
+          address: {
+            city : 'San Francisco',
+            country: 'US',
+            line1: '5 Main Street',
+            line2: 'Union Square',
+            state: 'CA',
+            postal_code: '95210',
+          },
+          // Only US Supported
+          // address: {
+          //   city : 'London',
+          //   country: 'GB',
+          //   line1: '10 Downing Street',
+          //   line2: '',
+          //   state: 'London',
+          //   postal_code: 'sw14 4aa',
+          // },
+          given_name: claimFirstName,
+          surname: claimSurname,
+        },
+      },
+      configuration: {
+        recipient_data: {
+          features: {
+            bank_accounts: {
+              local: {
+                requested: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    consoleLog(`accounts.create: ${JSON.stringify(rp_account, null, 2)}`)
+    res.json({ rp_accountId: rp_account.id });
+
+
+    // TEST
+    // const rp_account = await stripe.v2.accounts.retrieve(
+    //   'acct_test_61QSiioAgmgqkXZPt66QSiioAoSQZDmtXkAMwGDU87Iu',
+    //   {
+    //     include: ['legal_entity_data', 'configuration.recipient_data'],
+    //   }
+    // );
+
+    // consoleLog(`accounts.retrieve: ${JSON.stringify(rp_account, null, 2)}`);
+    // res.json({rp_accountId: rp_account});
+
+    // res.json({ rp_accountId: "acct_test_61QUwGV8JP0qJFctE66QUwGVAoSQLEwzskEAKuAfAWFU" });
+  } 
+  catch (error) {
+    console.error('Error while create-claim:', error);
+    res.status(500).json({ error: 'Failed to create-claim' + error });
+  }
+
+});
+
+ 
 // Get Hosted Bank Details see https://docs.corp.stripe.com/api/v2/accounts/account-links/create 
 app.post('/bankdetails-hosted', async (req, res) => {
   
   // see https://docs.corp.stripe.com/api/v2/accounts/account-links/create
   // For demonstration, let's log the received items to console
-  consoleLog('/bankdetails-hosted');
-  consoleLog(req.body.items);
-
+  consoleLog(`/bankdetails-hosted: ${JSON.stringify(req.body.items, null, 2)}`);
+  
   try {
 
      // Ensure there are items in the request body
@@ -266,8 +284,8 @@ app.post('/bankdetails-hosted', async (req, res) => {
           configurations: ['recipient'],
           // refresh_url: 'http://localhost://4242/claimpay-send.html',
           // return_url: 'http://localhost://4242/claimpay-send.html',
-          refresh_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay.html',
-          return_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claimspay-send.html?return_from_hosted',
+          refresh_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claims-pay.html',
+          return_url: 'https://stripe-localhost-redirectpage.glitch.me?http://localhost:4242/claims-pay.html?return_from_hosted',
         },
       },
     });
@@ -287,131 +305,91 @@ app.post('/bankdetails-hosted', async (req, res) => {
 });
 
 
-// Test Approve claim - create recipient and then take to bank account self hosting
-app.post('/approve-claim', async (req, res) => {
-  
+
+// Make Payment using https://docs.corp.stripe.com/api/v2/outbound-transfers/create
+app.post('/makepayout', async (req, res) => {
+
   // For demonstration, let's log the received items to console
-  consoleLog('/approve-claim');
-  consoleLog(req.body.items);
+  consoleLog(`/makepayout: ${JSON.stringify(req.body.items, null, 2)}`);
   
-   // Ensure there are items in the request body
-  if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
-      return res.status(400).json({ error: "No items provided." });
-  }
-
-  // Extract the first item from the array
-  const firstItem = req.body.items[0];
-
-  // // Extract the price of the first item
-  const { claimName } = firstItem;
-  const { claimEMailAddress } = firstItem;
-  const { claimType } = firstItem;
-  const { claimAddress } = firstItem;
-  const { claimDetails } = firstItem;
-  const { claimPolicyId } = firstItem;
-  const { claimAmount } = firstItem;
-  const { isBusinessClaim } = firstItem;
-  const { claimFirstName } = firstItem;
-  const { claimSurname } = firstItem;
-   
-  
-
-  // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
-  // https://docs.corp.stripe.com/api/v2/accounts/create 
-
-
-  const rp_account = await stripe.v2.accounts.retrieve(
-    'acct_test_61QSiioAgmgqkXZPt66QSiioAoSQZDmtXkAMwGDU87Iu',
+  try
     {
-      include: ['legal_entity_data', 'configuration.recipient_data'],
+    // Ensure there are items in the request body
+    if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
+        return res.status(400).json({ error: "No items provided." });
     }
-  );
 
-  consoleLog(`accounts.retrieve: ${JSON.stringify(rp_account, null, 2)}`);
-  res.json(rp_account);
-   
+    // Extract the first item from the array
+    const firstItem = req.body.items[0];
+
+    // // Extract the price of the first item
+    const { rpAccountId } = firstItem;
+    const { claimAmount } = firstItem;
+    const { claimDetails } = firstItem;
+
+    // Need to get the underlying back account id for the recipoient before can create a transfer
+
+    const outboundDestinations = await stripe.v2.paymentMethods.outboundDestinations.list({
+      stripeContext: rpAccountId,
+    });
+
+    bankAccountId = null
+    // Check if the response contains data and access the first item
+    if (outboundDestinations.data && outboundDestinations.data.length > 0) {
+      const firstItem = outboundDestinations.data[0];
+      bankAccountId = firstItem.id;  // You can also directly access bankAccountId through firstItem.bank_account.id if available in actual response
+      console.log('Bank Account ID:', bankAccountId);
+    } 
+    else {
+      console.log('No outbound destinations found.');
+      return null; // or handle the absence of data as needed
+    }
+
+    const fin_accountid = 'fa_test_65QIVHVDOvOYCGbNaGu16QIVGwAoSQ2sHaBpO6gZFTU2DA';
+
+    // Convert to scaler value (cents for USD)
+    const claimAmountScaler = Math.round(claimAmount * 100); // Ensures a whole number
+    const currency = 'usd';
+
+
+    consoleLog(`/makepayout to rpAccountId:${rpAccountId} fin_accountid:${fin_accountid} bankAccountId:${bankAccountId} claimAmountScaler: ${claimAmountScaler}`);
+
+    // https://docs.corp.stripe.com/api/v2/outbound-payments/create 
+    const outboundPayment = await stripe.v2.outboundPayments.create({
+      from: {
+        financial_account: fin_accountid,
+        balance_type: 'storage',
+      },
+      to: {
+        recipient: rpAccountId,
+        destination: bankAccountId,
+      },
+      money_movement_amounts: {
+        source: {
+          value: claimAmountScaler,
+          currency: currency,
+        },
+      },
+      recipient_notification: {
+        setting: 'configured',
+      },
+      description: claimDetails.claimPolicyId + ":" + claimDetails.claimDescription,
+      // metadata: {
+      //   id : "foo",
+      // },
+    });
+    
+    // consoleLog(`accounts.create: ${JSON.stringify(rp_account, null, 2)}`)
+    // res.json({ rp_accountId: rp_account.id });
+
+    consoleLog(`outboundPayments.create: ${JSON.stringify(outboundPayment, null, 2)}`)
+    res.json({ outboundPayments: outboundPayment });
+  }
+  catch (error) {
+    console.error('Error while makepayout:', error);
+    res.status(500).json({ error: 'Failed to makepayout' + error });
+  }
 });
-
-
-
-// // Approve claim - create recipient and then take to bank account self hosting
-// app.post('/approve-claim', async (req, res) => {
-  
-//   // For demonstration, let's log the received items to console
-//   consoleLog(req.body.items);
-  
-//    // Ensure there are items in the request body
-//   if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
-//       return res.status(400).json({ error: "No items provided." });
-//   }
-
-//   // Extract the first item from the array
-//   const firstItem = req.body.items[0];
-
-//   // // Extract the price of the first item
-//   const { claimName } = firstItem;
-//   const { claimEMailAddress } = firstItem;
-//   const { claimType } = firstItem;
-//   const { claimAddress } = firstItem;
-//   const { claimDetails } = firstItem;
-//   const { claimPolicyId } = firstItem;
-//   const { claimAmount } = firstItem;
-//   const { isBusinessClaim } = firstItem;
-//   const { claimFirstName } = firstItem;
-//   const { claimSurname } = firstItem;
-   
-  
-
-//   // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
-//   // https://docs.corp.stripe.com/api/v2/accounts/create 
-
-//   const rp_account = await stripe.v2.accounts.create({
-//     include: ['legal_entity_data', 'configuration.recipient_data'],
-//     name: claimName,
-//     email: claimEMailAddress,
-//     legal_entity_data: {
-//       business_type: 'individual',
-//       country: 'us',
-//       name: claimName,
-//       representative: {
-//         address: {
-//           city : 'San Francisco',
-//           country: 'US',
-//           line1: '5 Main Street',
-//           line2: 'Union Square',
-//           postal_code: '95210',
-//         },
-//         given_name: claimFirstName,
-//         surname: claimSurname,
-//       },
-//     },
-//     configuration: {
-//       recipient_data: {
-//         features: {
-//           bank_accounts: {
-//             local: {
-//               requested: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
-
-//   consoleLog(rp_account);
-
-
-  
-
-//   // // For demonstration, let's log the price to the console
-//   // console.log(`Name: ${rp_name}`);
-
-//   // res.redirect('/claimapproved');
-
-//   res.json({ rp_accountId: rp_account.id });
-// });
-
-
 
 
 // Expose a endpoint as a webhook handler for asynchronous events.
