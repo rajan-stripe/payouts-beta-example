@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Insurance Claims Using Recipient Payouts (US)</title>
+
+  <link rel="stylesheet" href="/css/base.css" />
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- <style>
+    /* Add your CSS styling here */
+    .flex { display: flex; }
+    .min-h-screen { min-height: 100vh; }
+    .bg-gray-100 { background-color: #f7fafc; }
+    .bg-white { background-color: white; }
+    .p-5 { padding: 1.25rem; }
+    .mb-5 { margin-bottom: 1.25rem; }
+    .space-x-2 > * + * { margin-left: 0.5rem; }
+    .rounded { border-radius: 0.25rem; }
+    .font-roboto { font-family: Roboto, sans-serif; }
+    .text-xl { font-size: 1.25rem; }
+    .text-gray-700 { color: #4a5568; }
+    .text-blue-600 { color: #3182ce; }
+    /* Further styling */
+  </style>   -->
+
+  <script src="/utils.js" defer></script>
+  <!-- <script src="/claimspay.js" defer></script> -->
+
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+      const rpAccount = window.rpAccount;
+      console.log('claims-pay.html:DOMContentLoaded', rpAccount);
+      const rpAccountJSON = localStorage.getItem('rpAccount');
+      if (rpAccountJSON) {
+        const rpAccount = JSON.parse(rpAccountJSON);
+        console.log('RP Account Data:', rpAccount);
+        // Store the rpAccount globally for later use
+        window.rpAccount = rpAccount;
+
+        // Get the claim details
+        const claimDetailsJSON = localStorage.getItem('claimDetails');
+        const claimDetails = JSON.parse(claimDetailsJSON);
+        console.log('Claim Details:', claimDetails);
+        
+        // Store the claim details globally for later use
+        window.claimDetails = claimDetails;
+        // Load the claim amount on the page, ensuring it is displayed as a decimal
+        document.getElementById('price').textContent = Number(claimDetails.claimAmount).toFixed(2);
+      } 
+      else {
+        console.error('No rpAccount data found in local storage.');
+      }
+    });
+
+    // Get hosted bank details for the recipient claim created
+    async function makePayout() {
+
+      //  https://docs.corp.stripe.com/api/v2/outbound-payments
+
+      console.log('claims-pay.html:makePayout');
+
+      const rpAccountJSON = localStorage.getItem('rpAccount');
+      if (!rpAccountJSON) {
+        console.error('No RP Account data available.');
+        return;
+      }
+      const rpAccount = JSON.parse(rpAccountJSON);
+      const rpAccountId = rpAccount.rp_accountId;
+      console.log('rpAccountId:', rpAccountId);
+
+      const claimDetailsJSON = localStorage.getItem('claimDetails');
+      if (!claimDetailsJSON) {
+        console.error('No claim details available.');
+        return;
+      }
+
+      console.log(`claimDetailsJSON: ${claimDetailsJSON}`);
+
+      const claimDetails = JSON.parse(claimDetailsJSON);
+      const claimAmount = Number(claimDetails.claimAmount).toFixed(2);
+      console.log(`Making a payout of ${claimAmount} to ${rpAccountId}`);
+      
+      try {
+        const response = await fetch("/makepayout", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json' // This line specifies the content type.
+          },
+          body: JSON.stringify({
+            items: [{ 
+              rpAccountId: rpAccountId,
+              claimAmount: claimAmount,
+              claimDetails,
+            }],
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const sData = JSON.stringify(data)
+          // Store the rpAccount object in local storage
+          console.log('OutboundPayment:', sData);
+          localStorage.setItem('OutboundPayment', sData);  
+
+          if (data.outboundPayments.receipt_url) {
+            // Redirect to the hosted bank details page
+             // Display the redirect URL in the textbox
+            document.getElementById('response-textbox').value = JSON.stringify(data.outboundPayments, null, 2);
+
+            // displayReceiptButton(data.outboundPayments.receipt_url);
+            // displayReceiptInIframe(data.outboundPayments.receipt_url);
+            // window.location.href = data.outboundPayments.receipt_url;
+
+            displayReceiptSection(data.outboundPayments.receipt_url);
+          } 
+          else {
+            console.error('No receipt_url provided in the response.');
+          }
+        } 
+        else {
+          const error = await response.json();
+          console.error('Error:', error);
+          document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
+
+        }
+      } 
+      catch (error) {
+        console.error('Error while making request:', error);
+        document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
+      }
+
+      // Replace with actual Stripe payout integration or any other payment processing logic
+      alert(`Payout of £${claimAmount} processed successfully for ${rpAcctId}!`);
+
+    }
+
+
+    function displayReceiptSection(receiptUrl) {
+      const completionContainer = document.getElementById('receipt-container');
+      completionContainer.innerHTML = `
+        <hr>
+        <section id="receipt-container">
+          <h4>Confirmation of Payment Sent to Claimant</h4>
+          <p>Payment has been processed successfully.</p>
+          <p>View  receipt <a href="${receiptUrl}" target="_blank">here</a>.</p>
+        </section>
+      `;
+    }
+
+    function displayReceiptInIframe(receiptUrl) {
+     
+      // Store the URL in a global variable so it can be accessed by the refresh function
+      window.receiptUrl = receiptUrl;
+
+      const receiptContainer = document.getElementById('receipt-container');
+      iframeContainer.innerHTML = `<iframe id="receiptIframe" src="${receiptUrl}" width="100%" height="1000px"></iframe>`;
+
+      // // Automatically refresh the iframe every 30 seconds
+      setInterval(refreshIframe, 5000); // 30000 milliseconds = 30 seconds
+    }
+
+    function refreshIframe() {
+      const iframe = document.getElementById('receiptIframe');
+      if (iframe) {
+        iframe.src = window.receiptUrl; // Refresh the iframe by updating its src attribute
+      }
+    }
+
+
+    function displayReceiptButton(receiptUrl) {
+      const receiptContainer = document.getElementById('receipt-container');
+      receiptContainer.innerHTML = `<button type="button" onclick="window.open('${receiptUrl}', '_blank')">View Receipt</button>`;
+    }
+
+     // Function to add the payment section
+    function addPaymentSection() {
+      const rpAccount = window.rpAccount;
+      const claimDetailsJSON = localStorage.getItem('claimDetails');
+      const claimDetails = JSON.parse(claimDetailsJSON);
+      
+      const paymentSectionContainer = document.getElementById('payment-section-container');
+      const paymentSection = `
+        <section id="payment-section">
+          <h3>Make Payment</h3>
+          <p>Amount to be claimed: $<span id="payment-amount">${claimDetails.claimAmount}</span></p>
+          <p>Name: ${claimDetails.claimFirstName} ${claimDetails.claimSurname} </p>
+          <p>PolicyId: ${claimDetails.claimPolicyId}</p>
+          <p>ClaimType: ${claimDetails.claimType}</p>
+          <p>ClaimDescription: ${claimDetails.claimDescription}</p>
+          <button type="button" onclick="makePayout()">Make Payment</button>
+        </section>
+      `;
+      paymentSectionContainer.innerHTML = paymentSection;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if the URL has query parameters indicating a return from the hosted page
+
+      // Add Payment Section as user has returned from the hosted details page
+      addPaymentSection();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('return_from_hosted')) {
+         // if redirect param provided
+      }
+    });
+
+
+  </script>
+
+</head>
+
+<body>
+  <main>
+    <div class="container">
+      <!-- <img src="https://www.futuretravelexperience.com/wp-content/uploads/2022/03/collinson.png" alt="Logo Here"
+        width="200" height="100"> -->
+        <div class="banner">
+          <img src="llamainsurance.jpg" alt="Logo Here" width="125" height="125">
+          <span class="banner-text">Stripe Llama Insurance</span>
+        </div>
+        <hr>
+    </div>
+    <h1>Insurance Claims Payouts Using Recipient Payouts (US)</h1>
+    <h2>Claim Approved - Payout to Customer</h2>
+    
+    <form id="claim-form">
+      <div class="container">
+
+        <div class="well">
+          <div class="container">
+            <table class="claim-summary">
+              <tr>
+                <td>Claim Amount</td>
+                <td>£<span id="price">0.00</span></td>
+              </tr>
+  
+            </table>
+  
+            <div class="error-message" role="alert"></div>
+          </div>
+        </div>
+      
+      <hr>
+      <!-- Container for Payment Section -->
+      <div id="payment-section-container"></div>
+       <!-- Container for displaying receipt -->
+        <div id="receipt-container"></div>
+      <!-- Textbox to display the response -->
+      <hr>
+      <label>
+        Response URL
+        <textarea id="response-textbox" font-size="1.1em" rows="10" cols="100" placeholder="">
+        </textarea>
+      </label>
+    </form>
+</main>
+</body>
+
+</html>

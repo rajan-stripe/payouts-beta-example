@@ -7,6 +7,26 @@
   --radius: 3px;
 }
 
+.claim-details {
+  font-family: Arial, sans-serif;
+  font-size: 1.2em;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 10px; /* Adjust gap as needed */
+  padding: 20px; /* Adjust padding as needed */
+}
+.banner img {
+  vertical-align: middle;
+}
+.banner-text {
+  font-size: 1.5em; /* Adjust font size as needed */
+  font-weight: bold;
+}
+
 body {
   padding: 20px;
   font-family: 'Raleway';

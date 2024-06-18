@@ -25,9 +25,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert('Please set your accountName in the .env file');
   }
 
-  const stripe = Stripe(publishableKey, {
-    apiVersion: '2020-08-27',
+  // const stripe = Stripe(publishableKey, {
+  //   apiVersion: '2020-08-27',
+  // });
+
+  // Initialize Stripe
+  
+  var stripe = Stripe(publishableKey); // Replace with your actual publishable key
+
+  const appearance = {
+    theme: 'flat',
+    variables: { colorPrimaryText: '#262626' }
+  };
+  var elements = stripe.elements({appearance});
+
+  // Create and mount the Address Element
+  var addressElement = elements.create('address', {
+    mode: 'shipping' // Use 'billing' for billing addresses
   });
+
+  addressElement.mount('#address-element-container');
+
 
 
 
@@ -42,17 +60,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
 
-        // const claimName = document.getElementById('name-input').value;
-        const claimName = 'JWick';
-        const claimType = 'Medical';
-        const claimEMailAddress = 'jw@example.com';
-        const claimAddress = '10 Downing Street, London, SW14 4AA';
-        const claimDescription = 'Medical bills';
-        const claimPolicyId = 'CL12345678';
-        const claimAmount = Number(101.00).toFixed(2);
+        const claimName = document.getElementById('name-input').value.trim();
+        const claimEMailAddress = document.getElementById('email-input').value.trim();
+        const claimAddress = document.getElementById('address-input').value.trim();
+        const claimType = document.getElementById('claim-type').value.trim();
+        const claimDescription = document.getElementById('claim-details').value.trim();
+        const claimPolicyId =  document.getElementById('claim-policy').value.trim();
+        const claimAmount = Number(document.getElementById('claim-amount').value.trim()).toFixed(2);
         const isBusinessClaim = false; 
-        const claimFirstName  = 'John';
-        const claimSurname = 'Wick';
+        var nameParts = claimName.split(' ');
+        const claimFirstName  =  nameParts[0];
+        const claimSurname = nameParts.length > 1 ? nameParts.slice(-1).join(' ') : '';;
+
+        // const claimName = 'JWick';
+        // const claimType = 'Medical';
+        // const claimEMailAddress = 'rajan+rp-jw@stripe.com';
+        // const claimAddress = '10 Downing Street, London, SW14 4AA';
+        // const claimDescription = 'Medical bills';
+        // const claimPolicyId = 'CL12345678';
+        // const claimAmount = Number(101.00).toFixed(2);
+        // const isBusinessClaim = false; 
+        // const claimFirstName  = 'John';
+        // const claimSurname = 'Wick';
 
         const claimDetails = {
           claimName: claimName,
@@ -64,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           claimAmount: claimAmount,
           isBusinessClaim: isBusinessClaim,
           claimFirstName: claimFirstName,
-          claimSurname: claimFirstName,
+          claimSurname: claimSurname,
         };
 
         // Prevent multiple form submissions
@@ -76,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         submitBtn.disabled = true;
     
         // Create recipient 
-        const response = await fetch("/approve-claim", {
+        const response = await fetch("/create-claim", {
           method: "POST",
           headers: {
             'Content-Type': 'application/json' // This line specifies the content type.
@@ -122,16 +151,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Alternatively, pass the rp_accountId as a query parameter in the URL
           // window.location.href = `/claimspay.html?rp_accountId=${rp_accountId}`;
 
-          window.location.href = '/claimspay.html';
+          window.location.href = '/claims-getbank.html';
         } 
         else {
           // Handle any errors
           const error = await response.json();
-          console.error('Error:', error.message);
+          console.error('Error:', error);
+          document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
+
         }
       }
       catch (error) {
-        console.error('Error:', error);
+        console.error('Error while making request:', error);
+        document.getElementById('response-textbox').value = `Error: ${JSON.stringify(error, null, 2)}`;
       }
       finally {
         submitBtn.disabled = false; // Re-enable the submit button
