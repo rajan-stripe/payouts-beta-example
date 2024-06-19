@@ -40,12 +40,12 @@
       <!-- <img src="https://www.futuretravelexperience.com/wp-content/uploads/2022/03/collinson.png" alt="Logo Here"
         width="200" height="100"> -->
         <div class="banner">
-          <img src="llamainsurance.jpg" alt="Logo Here" width="125" height="125">
+          <a href='./claims.html'><img src="llamainsurance.jpg" alt="Logo Here" width="125" height="125"></a> 
           <span class="banner-text">Stripe Llama Insurance</span>
         </div>
         <hr>
     </div>
-    <h1>Insurance Claims Processing Using Recipient Payouts (US)</h1>
+    <h1>Claims Processing Using Recipient Payouts</h1>
     
     <!-- <p>Enable more payment method types <a href="https://dashboard.stripe.com/settings/payment_methods?" + accountId
         target="_blank">in your
@@ -57,51 +57,63 @@
       <div class="container">
         <section>
           <h3>Claimant Personal Details</h3>
-          <label>
+          <!-- <label>
             Name: 
             <input type="text" id="name-input" placeholder="John Doe" />
           </label>
-          <label>
-            Email
-            <input type="text" id="email-input" placeholder="jd@example.com" />
-          </label>
+        
           <label>
             <Address></Address>
             <input type="text" id="address-input" placeholder="10 Downing Street" />
-          </label>
+          </label> -->
+
           <hr>
-           <!-- Container for Address Element -->
-           <div id="address-element-container"></div>
+           <!-- USe Stripe Address Element -->
+           <!-- Container for Email and Address Element -->
+           <!-- <div id="link-authentication-element"></div>
+           <div id="payment-element"></div> -->
+           <div id="address-element"></div>
         </section>
         <hr>
         <section>
           <h3>Claim Details</h3>
-          <label>
-            Claim Amount
-            <input type="input" id="claim-amount" placeholder="101.00" />
-          </label>
-          <label>
-            Claim Type
-            <select id="claim-type">
-              <option value="medical">Medical</option>
-              <option value="dental">Dental</option>
-              <option value="vision">Vision</option>
-              <option value="accident">Accident</option>
-              <option value="theft">Theft</option>
-              <option value="travel">Travel</option>
-              <option value="house">House</option>
-              <option value="car">Car</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
+          <div class="form-row">
+            <label>
+              Claim Type
+              <select id="claim-type">
+                <option value="medical">Medical</option>
+                <option value="dental">Dental</option>
+                <option value="vision">Vision</option>
+                <option value="accident">Accident</option>
+                <option value="theft">Theft</option>
+                <option value="travel">Travel</option>
+                <option value="house">House</option>
+                <option value="car">Car</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            
+            <label>
+              Policy ID
+              <input type="text" id="claim-policy" placeholder="CL123435678" />
+            </label>
+            <label>
+              Claim Amount
+              <input type="input" id="claim-amount" placeholder="101.00" />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              Email
+              <input type="text" id="email-input" placeholder="rajan+rpjd@stripe.com" />
+            </label>
+          </div>
           <label>
             Claim Details<p></p>
-            <textarea class="claim-details" id="claim-details"  rows="8" cols="63" placeholder=""></textarea>
+            <textarea class="claim-details" id="claim-details"  rows="8"  placeholder="Claim details as description to be added here to the payout receipt"></textarea>
           </label>
-          <label>
-            Policy ID
-            <input type="text" id="claim-policy" placeholder="CL123435678" />
-          </label>
+         
         </section>
         <hr>
       </div>

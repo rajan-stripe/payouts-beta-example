@@ -2,6 +2,13 @@
 # payouts-beta
 This app simply demos Payouts Beta to facilitate a claims insurance payout direct to bank accounts
 
+Using the v2 Recipient Payouts
+https://docs.corp.stripe.com/api/v2
+https://docs.corp.stripe.com/payouts-beta 
+https://docs.corp.stripe.com/sdks-v2?lang=node 
+
+
+
 https://github.com/rajan-stripe/payouts-beta-example 
 
 To enable payouts there is special beta sdk and gh key to use as per  https://docs.corp.stripe.com/sdks-v2?lang=node 

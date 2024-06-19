@@ -135,13 +135,13 @@
       <!-- <img src="https://www.futuretravelexperience.com/wp-content/uploads/2022/03/collinson.png" alt="Logo Here"
         width="200" height="100"> -->
         <div class="banner">
-          <img src="llamainsurance.jpg" alt="Logo Here" width="125" height="125">
+          <a href='./claims.html'><img src="llamainsurance.jpg" alt="Logo Here" width="125" height="125"></a> 
           <span class="banner-text">Stripe Llama Insurance</span>
         </div>
         <hr>
     </div>
 
-    <h1>Insurance Claims Payouts Using Recipient Payouts (US)</h1>
+    <h1>Claims Payouts Using Recipient Payouts</h1>
     <h2>Claim Approved - Get Customer Payment Details</h2>
     
     <form id="claim-form">
@@ -152,7 +152,7 @@
             <table class="claim-summary">
               <tr>
                 <td>Claim Amount</td>
-                <td>£<span id="price">0.00</span></td>
+                <td><span id="price">0.00</span></td>
               </tr>
   
             </table>
@@ -163,21 +163,22 @@
         <section>
           <h3>Collect Customer Bank Details</h3>
           <hr>
-          <h4>Use Stripe Hosted Bank Details</h4>
-          <button type="button" onclick="addBankHosted()">Get Bank Details (Hosted)</button>
-          <hr>
-          <h4>Provide Bank Details Directly</h4>
-          <label>
-            Sort Code
-            <input type="text" class="bank-sort" placeholder="" />
-          </label>
-          <label>
-            Account No
-            <input type="text" class="bank-account" placeholder="" />
-          </label>
-          <button type="button" onclick="addBank()">Attach Bank</button>
+          <h4>Provide Bank Details</h4>
+          <div class="form-row">
+            <label>
+              Sort Code
+              <input type="text" class="bank-sort" placeholder="" />
+            </label>
+            <label>
+              Account No
+              <input type="text" class="bank-account" placeholder="" />
+            </label>
+          </div>
+          <div class="form-row">
+            <button type="button" onclick="addBank()">Attach Bank</button>
+            <button type="button" onclick="addBankHosted()">Get Bank Details (Hosted)</button>
+          </div>
         </section>
-        <hr>
       </div>
       <!-- Container for Payment Section -->
       <div id="payment-section-container"></div>

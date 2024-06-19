@@ -157,7 +157,7 @@ app.get('/submitclaim', function (req, res) {
 app.post('/create-claim', async (req, res) => {
   
   // For demonstration, let's log the received items to console
-  consoleLog(`/create-claim: ${JSON.stringify(req.body.items, null, 2)}`);
+  consoleLog(`/create-claim.req: ${JSON.stringify(req.body.items, null, 2)}`);
   
   try {
 
@@ -170,38 +170,46 @@ app.post('/create-claim', async (req, res) => {
     const firstItem = req.body.items[0];
 
     // // Extract the price of the first item
-    const { claimName } = firstItem;
-    const { claimEMailAddress } = firstItem;
-    const { claimType } = firstItem;
-    const { claimAddress } = firstItem;
+    // const { claimName } = firstItem;
     const { claimDetails } = firstItem;
-    const { claimPolicyId } = firstItem;
-    const { claimAmount } = firstItem;
-    const { isBusinessClaim } = firstItem;
-    const { claimFirstName } = firstItem;
-    const { claimSurname } = firstItem;
+    // const { claimFirstName } = firstItem;
+    // const { claimSurname } = firstItem;
     
     
 
     // TODO : Create a recipient with the data and when successful redirect to the payment page to take bank account details
     // https://docs.corp.stripe.com/api/v2/accounts/create 
 
+
+     var nameParts = claimDetails.claimAddress.name.split(' ');
+     const claimFirstName  =  nameParts[0];
+     const claimSurname = nameParts.length > 1 ? nameParts.slice(-1).join(' ') : '';;
+
+
     const rp_account = await stripe.v2.accounts.create({
       include: ['legal_entity_data', 'configuration.recipient_data'],
-      name: claimName,
-      email: claimEMailAddress,
+      name: claimDetails.claimAddress.name,
+      email: claimDetails.claimEMailAddress,
       legal_entity_data: {
         business_type: 'individual',
         country: 'us',
-        name: claimName,
+        name: claimDetails.claimAddress.name,
+        address: {
+          city : claimDetails.claimAddress.address.city,
+          country: claimDetails.claimAddress.address.country,
+          line1:  claimDetails.claimAddress.address.line1,
+          line2: claimDetails.claimAddress.address.line2,
+          state: claimDetails.claimAddress.address.state,
+          postal_code: claimDetails.claimAddress.address.postal_code,
+        },
         representative: {
           address: {
-            city : 'San Francisco',
-            country: 'US',
-            line1: '5 Main Street',
-            line2: 'Union Square',
-            state: 'CA',
-            postal_code: '95210',
+            city : claimDetails.claimAddress.address.city,
+            country: claimDetails.claimAddress.address.country,
+            line1:  claimDetails.claimAddress.address.line1,
+            line2: claimDetails.claimAddress.address.line2,
+            state: claimDetails.claimAddress.address.state,
+            postal_code: claimDetails.claimAddress.address.postal_code,
           },
           // Only US Supported
           // address: {
@@ -214,6 +222,7 @@ app.post('/create-claim', async (req, res) => {
           // },
           given_name: claimFirstName,
           surname: claimSurname,
+
         },
       },
       configuration: {

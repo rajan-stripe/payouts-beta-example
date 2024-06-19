@@ -37,14 +37,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     theme: 'flat',
     variables: { colorPrimaryText: '#262626' }
   };
-  var elements = stripe.elements({appearance});
+
+  const options = {
+    // mode: 'setup',
+    // amount: 1099,
+    // currency: 'usd',
+    // paymentMethodCreation: 'manual',
+    // Fully customizable with appearance API.
+    appearance: {
+      theme: 'flat',
+      variables: { colorPrimaryText: '#262626' }
+    },
+  };
+
+  const loader = 'auto';
+  const elements = stripe.elements({appearance, loader});
+
+  // // Create Element instances
+  // const linkAuthenticationElement = elements.create("linkAuthentication");
 
   // Create and mount the Address Element
-  var addressElement = elements.create('address', {
-    mode: 'shipping' // Use 'billing' for billing addresses
+  const addressElement = elements.create('address', {
+    mode: 'shipping', // Use 'billing' for billing addresses
+    autocomplete: {
+      mode: "google_maps_api",
+      apiKey: "AIzaSyCuE61a_NYB-QyGomjr93QfNbzMOOVzae8",
+    },
+    defaultValues: {
+      name: 'Jane Doe',
+      address: {
+        line1: '354 Oyster Point Blvd',
+        line2: '',
+        city: 'South San Francisco',
+        state: 'CA',
+        postal_code: '94080',
+        country: 'US',
+      },
+      phone: '+44 7400 123456',
+    },
+    allowedCountries: ['US'], // can change this in future
+    
+    fields: {
+      phone: 'always',
+    },
+    validation: {
+      phone: {
+        required: 'never',
+      },
+    },
+
   });
 
-  addressElement.mount('#address-element-container');
+// Passing in defaultValues is optional, but useful if you want to prefill consumer information to
+// ease consumer experience.
+// const paymentElement = elements.create('payment', {
+//   defaultValues: {
+//     billingDetails: {
+//       name: 'John Doe',
+//       phone: '888-888-8888',
+//     },
+//   },
+// });
+
+// Mount the Elements to their corresponding DOM node
+// linkAuthenticationElement.mount("#link-authentication-element");
+addressElement.mount("#address-element");
+// paymentElement.mount("#payment-element");
 
 
 
@@ -60,17 +118,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
 
-        const claimName = document.getElementById('name-input').value.trim();
+        // Elements Address
+
+        const addressElement = elements.getElement('address');
+
+        const {complete, value} = await addressElement.getValue();
+      
+        if (complete) {
+          console.log('address-element.value:', value);
+          // return;
+        }
+
+        // const claimName = document.getElementById('name-input').value.trim();
         const claimEMailAddress = document.getElementById('email-input').value.trim();
-        const claimAddress = document.getElementById('address-input').value.trim();
+        // const claimAddress = document.getElementById('address-input').value.trim();
+        const claimAddress = value;
+
         const claimType = document.getElementById('claim-type').value.trim();
         const claimDescription = document.getElementById('claim-details').value.trim();
         const claimPolicyId =  document.getElementById('claim-policy').value.trim();
         const claimAmount = Number(document.getElementById('claim-amount').value.trim()).toFixed(2);
         const isBusinessClaim = false; 
-        var nameParts = claimName.split(' ');
-        const claimFirstName  =  nameParts[0];
-        const claimSurname = nameParts.length > 1 ? nameParts.slice(-1).join(' ') : '';;
+        // var nameParts = claimName.split(' ');
+        // const claimFirstName  =  nameParts[0];
+        // const claimSurname = nameParts.length > 1 ? nameParts.slice(-1).join(' ') : '';;
 
         // const claimName = 'JWick';
         // const claimType = 'Medical';
@@ -84,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // const claimSurname = 'Wick';
 
         const claimDetails = {
-          claimName: claimName,
+          // claimName: claimName,
           claimType: claimType,
           claimEMailAddress: claimEMailAddress,
           claimAddress: claimAddress,
@@ -92,8 +163,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           claimPolicyId: claimPolicyId,
           claimAmount: claimAmount,
           isBusinessClaim: isBusinessClaim,
-          claimFirstName: claimFirstName,
-          claimSurname: claimSurname,
+          // claimFirstName: claimFirstName,
+          // claimSurname: claimSurname,
         };
 
         // Prevent multiple form submissions
@@ -112,16 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           },
           body: JSON.stringify({
             items: [{ 
-              claimName: claimName,
-              claimEMailAddress : claimEMailAddress,
-              claimType: claimType,
-              claimAddress: claimAddress,
               claimDetails: claimDetails,
-              claimPolicyId : claimPolicyId,
-              claimAmount : claimAmount,
-              isBusinessClaim : isBusinessClaim,
-              claimFirstName : claimFirstName,
-              claimSurname : claimSurname,
             }],
           }),
         });
