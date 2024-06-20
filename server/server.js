@@ -431,6 +431,10 @@ app.post('/webhook', async (req, res) => {
     eventType = req.body.type;
   }
 
+   // For demonstration, let's log the received items to console
+  consoleLog(`/webhook: event:${event} date:${data}`);
+  
+
   if (eventType === 'payment_intent.succeeded') {
     // Funds have been captured
     // Fulfill any orders, e-mail receipts, etc
